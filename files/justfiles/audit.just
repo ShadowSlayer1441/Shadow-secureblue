@@ -1,6 +1,7 @@
 # Audit secureblue
 audit-secureblue:
     #!/bin/bash
+    set -euo pipefail 
 
     STATUS_SUCCESS="SUCCESS"
     STATUS_WARNING="WARNING"
