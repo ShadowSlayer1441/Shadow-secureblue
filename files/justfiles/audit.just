@@ -26,7 +26,7 @@ audit-secureblue:
     print_heading() {
         echo
         gum style --bold --background=63 --foreground=228 "$1"
-        printf '=%.0s' {1..76}
+        printf '=%.0s' {1..98}
         echo
     }
     hasPermission() {
@@ -304,23 +304,34 @@ audit-secureblue:
         print_status "$SECUREBOOT_TEST_STRING" "$STATUS_FAILURE"
     fi
 
+    BASH_ENV_STATUS="locked"
     BASH_ENV_FILES=("$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.config/bash-completion" "$HOME/.profile" "$HOME/.bash_logout" "$HOME/.bash_login")
+    declare -a Unlocked_Files=()
+    BASH_ENV_STRING="Ensuring user bash environment is locked down"
     for file in "${BASH_ENV_FILES[@]}"; do
-        BASH_ENV_STRING="Ensuring $file exists and is immutable"
         if lsattr "$file" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
             immut="true"
         else
             immut="false"
         fi
         if [ -f "$file" ] && [ "$immut" == "true" ]; then
-            print_status "$BASH_ENV_STRING" "$STATUS_SUCCESS"
+        	:
         else
-            print_status "$BASH_ENV_STRING" "$STATUS_FAILURE"
-            suggestions+=("Bash environment is not locked down; $file does not appear to be immutable or does not exists.	To fix run:	$ ujust toggle-bash-environment-lockdown")
+        	BASH_ENV_STATUS="unlocked"
+        	Unlocked_Files+=("$file")
         fi
     done
 
-    echo "Do you want to audit flatpaks as well? [y/N] (Will generate a few lines for every flatpak currently installed.)"
+    if [ "$BASH_ENV_STATUS"  == "locked" ]; then
+            print_status "$BASH_ENV_STRING" "$STATUS_SUCCESS"
+    else
+            print_status "$BASH_ENV_STRING" "$STATUS_FAILURE"
+            formatted_unlocked_files=$(echo "${Unlocked_Files[@]}" | tr ' ' '\t') # sed 's/ /\t/') # | sed 's/,*$//')
+            suggestions+=("Bash environment is not locked down; The following files do not appear to be immutable or do not exist:	$formatted_unlocked_files	To fix run:	$ ujust toggle-bash-environment-lockdown")
+    fi
+
+    echo ""
+    echo "Do you want to audit flatpaks as well? [y/N]"
     read -r REPLY
     if [[ "$REPLY" == [nN]* ]]; then
     	print_heading Recommendations
@@ -338,6 +349,7 @@ audit-secureblue:
         done
         exit
     fi
+    echo ""
 
     if command -v flatpak &> /dev/null; then
         remotes="$(flatpak remotes -d)"
