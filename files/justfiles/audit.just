@@ -329,6 +329,10 @@ audit-secureblue:
         print_status "$SECUREBOOT_TEST_STRING" "$STATUS_FAILURE"
     fi
 
+    echo ""
+    echo "Do you want to audit flatpaks as well? [y/N]"
+    read -r REPLY
+    if [[ "$REPLY" == [yY]* ]]; then
     if command -v flatpak &> /dev/null; then
         remotes="$(flatpak remotes -d)"
         while read -r remote ; do
@@ -414,8 +418,10 @@ audit-secureblue:
                 echo "$warning"
             done
         done
+    fi
+    fi
 
-        print_heading Recommendations
+    print_heading Recommendations
         for suggestion in "${suggestions[@]}"; do
             readarray -t -d '	' list < <(printf "$suggestion")
             echo "${list[0]}"
@@ -428,4 +434,3 @@ audit-secureblue:
             done
             echo
         done
-    fi
