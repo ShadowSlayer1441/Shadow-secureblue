@@ -228,7 +228,7 @@ audit-secureblue:
             print_status "$FLATPAK_USER_UPDATE_TIMER_TEST_STRING" "$STATUS_SUCCESS"
         else
             print_status "$FLATPAK_USER_UPDATE_TIMER_TEST_STRING" "$STATUS_FAILURE"
-            suggestions+=("flatpak-user-update.timer is not enabled globally	To enable, run:	$ run0 systemctl enable --global flatpak-user-update.timer")
+            suggestions+=("flatpak-user-update.timer is not enabled globally	To enable, run:	$ systemctl enable --global flatpak-user-update.timer")
         fi
 
         FLATPAK_SYSTEM_UPDATE_TIMER_TEST_STRING="Ensuring flatpak-system-update.timer is enabled"
