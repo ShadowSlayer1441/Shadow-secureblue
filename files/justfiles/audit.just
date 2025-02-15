@@ -23,9 +23,19 @@ audit-secureblue:
 
         printf "%-64s [ \033[%dm%s\033[0m ]\n" "$check_name"... "$color_code" "$formatted_status"
     }
+
+    if command -v gum >/dev/null 2>&1; then
+        HAS_GUM=true
+    else
+        HAS_GUM=false
+    fi
     print_heading() {
         echo
-        gum style --bold --background=63 --foreground=228 "$1"
+        if [[ $HAS_GUM == true ]]; then 
+            gum style --bold --background=63 --foreground=228 "$1"
+        else
+            echo "$1"
+        fi
         printf '=%.0s' {1..76}
         echo
     }
@@ -116,7 +126,7 @@ audit-secureblue:
     fi
 
     SIGNED_IMAGE_TEST_STRING="Ensuring a signed image is in use"
-    if rpm-ostree status 2>/dev/null | grep -q "● ostree-image-signed"; then
+    if rpm-ostree status | grep -q "● ostree-image-signed"; then
         print_status "$SIGNED_IMAGE_TEST_STRING" "$STATUS_SUCCESS"
     else
         print_status "$SIGNED_IMAGE_TEST_STRING" "$STATUS_FAILURE"
@@ -209,23 +219,50 @@ audit-secureblue:
         print_status "$GLOBAL_PODMAN_AUTO_UPDATE_TIMER_TEST_STRING" "$STATUS_SUCCESS"
     else
         print_status "$GLOBAL_PODMAN_AUTO_UPDATE_TIMER_TEST_STRING" "$STATUS_FAILURE"
-        suggestions+=("podman-auto-update.timer is not enabled globally	To enable, run:	$ run0 systemctl enable --global podman-auto-update.timer")
+        suggestions+=("podman-auto-update.timer is not enabled globally	To enable, run:	$ systemctl enable --global podman-auto-update.timer")
     fi
 
-    FLATPAK_USER_UPDATE_TIMER_TEST_STRING="Ensuring flatpak-user-update.timer is enabled globally"
-    if systemctl --global is-enabled --quiet flatpak-user-update.timer; then
-        print_status "$FLATPAK_USER_UPDATE_TIMER_TEST_STRING" "$STATUS_SUCCESS"
-    else
-        print_status "$FLATPAK_USER_UPDATE_TIMER_TEST_STRING" "$STATUS_FAILURE"
-        suggestions+=("flatpak-user-update.timer is not enabled globally	To enable, run:	$ run0 systemctl enable --global flatpak-user-update.timer")
+    if command -v flatpak >/dev/null 2>&1; then
+        FLATPAK_USER_UPDATE_TIMER_TEST_STRING="Ensuring flatpak-user-update.timer is enabled globally"
+        if systemctl --global is-enabled --quiet flatpak-user-update.timer; then
+            print_status "$FLATPAK_USER_UPDATE_TIMER_TEST_STRING" "$STATUS_SUCCESS"
+        else
+            print_status "$FLATPAK_USER_UPDATE_TIMER_TEST_STRING" "$STATUS_FAILURE"
+            suggestions+=("flatpak-user-update.timer is not enabled globally	To enable, run:	$ systemctl enable --global flatpak-user-update.timer")
+        fi
+
+        FLATPAK_SYSTEM_UPDATE_TIMER_TEST_STRING="Ensuring flatpak-system-update.timer is enabled"
+        if systemctl is-enabled --quiet flatpak-system-update.timer; then
+            print_status "$FLATPAK_SYSTEM_UPDATE_TIMER_TEST_STRING" "$STATUS_SUCCESS"
+        else
+            print_status "$FLATPAK_SYSTEM_UPDATE_TIMER_TEST_STRING" "$STATUS_FAILURE"
+            suggestions+=("flatpak-system-update.timer is not enabled globally	To enable, run:	$ systemctl enable --now flatpak-system-update.timer")
+        fi
     fi
 
-    FLATPAK_SYSTEM_UPDATE_TIMER_TEST_STRING="Ensuring flatpak-system-update.timer is enabled"
-    if systemctl is-enabled --quiet flatpak-system-update.timer; then
-        print_status "$FLATPAK_SYSTEM_UPDATE_TIMER_TEST_STRING" "$STATUS_SUCCESS"
+    BASH_TEST_STRING="Ensuring bash environment lockdown"
+    BASH_ENV_FILES=(~/.bashrc ~/.bash_profile)
+    all_locked=1
+
+    for file in "${BASH_ENV_FILES[@]}"; do
+        if [ -f "$file" ]; then
+            if lsattr "$file" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
+                continue
+            else
+                all_locked=0
+                break
+            fi
+        else
+            all_locked=0
+            break
+        fi
+    done
+
+    if [ "$all_locked" -eq 1 ]; then
+        print_status "$BASH_TEST_STRING" "$STATUS_SUCCESS"
     else
-        print_status "$FLATPAK_SYSTEM_UPDATE_TIMER_TEST_STRING" "$STATUS_FAILURE"
-        suggestions+=("flatpak-system-update.timer is not enabled globally	To enable, run:	$ systemctl enable --now flatpak-system-update.timer")
+        print_status "$BASH_TEST_STRING" "$STATUS_FAILURE"
+        suggestions+=("The bash environment is not locked down	Run:	$ ujust toggle-bash-environment-lockdown")
     fi
 
     WHEEL_TEST_STRING="Ensuring user is not a member of wheel"
@@ -422,7 +459,11 @@ audit-secureblue:
             echo "${list[0]}"
             for (( i=1; i < ${#list[@]}; i++ )); do
                 if [[ ${list[i]} =~ ^"$" ]]; then
-                    gum style --bold "  ${list[i]}"
+                    if [[ $HAS_GUM == true ]]; then 
+                        gum style --bold "  ${list[i]}"
+                    else
+                        echo "  ${list[i]}"
+                    fi
                 else
                     echo -e "  ${list[i]}"
                 fi
