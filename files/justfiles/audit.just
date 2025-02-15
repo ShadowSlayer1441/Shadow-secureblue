@@ -21,12 +21,12 @@ audit-secureblue:
         formatted_status=$(printf "%*s" $(( (7 + ${#status}) / 2 )) "$status")
         formatted_status=$(printf "%-7s" "$formatted_status")
 
-        printf "%-86s [ \033[%dm%s\033[0m ]\n" "$check_name"... "$color_code" "$formatted_status"
+        printf "%-64s [ \033[%dm%s\033[0m ]\n" "$check_name"... "$color_code" "$formatted_status"
     }
     print_heading() {
         echo
         gum style --bold --background=63 --foreground=228 "$1"
-        printf '=%.0s' {1..98}
+        printf '=%.0s' {1..76}
         echo
     }
     hasPermission() {
@@ -329,27 +329,6 @@ audit-secureblue:
             formatted_unlocked_files=$(echo "${Unlocked_Files[@]}" | tr ' ' '\t') # sed 's/ /\t/') # | sed 's/,*$//')
             suggestions+=("Bash environment is not locked down; The following files do not appear to be immutable or do not exist:	$formatted_unlocked_files	To fix run:	$ ujust toggle-bash-environment-lockdown")
     fi
-
-    echo ""
-    echo "Do you want to audit flatpaks as well? [y/N]"
-    read -r REPLY
-    if [[ "$REPLY" == [nN]* ]]; then
-    	print_heading Recommendations
-        for suggestion in "${suggestions[@]}"; do
-            readarray -t -d '	' list < <(printf "$suggestion")
-            echo "${list[0]}"
-            for (( i=1; i < ${#list[@]}; i++ )); do
-                if [[ ${list[i]} =~ ^"$" ]]; then
-                    gum style --bold "  ${list[i]}"
-                else
-                    echo -e "  ${list[i]}"
-                fi
-            done
-            echo
-        done
-        exit
-    fi
-    echo ""
 
     if command -v flatpak &> /dev/null; then
         remotes="$(flatpak remotes -d)"
