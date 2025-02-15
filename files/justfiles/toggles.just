@@ -233,7 +233,7 @@ toggle-bash-environment-lockdown:
     		if [ -d "$user_home/.bashrc.d/" ]; then
                 # Below is done to allow this process to reset the locked files
                 chattr -R -i "$user_home/.bashrc.d/"
-    			rm -r "$user_home/.bashrc.d/"
+        	    rm -r "$user_home/.bashrc.d/"
         	fi
     		echo "Creating empty $user_home/.bashrc.d/"
             # -p means mkdir will create folder if necessary
