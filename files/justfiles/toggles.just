@@ -230,26 +230,19 @@ toggle-bash-environment-lockdown:
     	user_home=$(getent passwd "$user" | awk -F':' '{ print $6}')
     	[[ -d "$user_home" ]] || {echo "Variable \$user_home for $user is somehow empty (check your getent passwd entries); safely exiting."; exit 1;}
     	if [ "$change_to_make" == "locked" ]; then
-    		if [ -d "$user_home/.bashrc.d/" ]; then
-                # Below is done to allow this process to reset the locked files
-                chattr -R -i "$user_home/.bashrc.d/"
-        	    rm -r "$user_home/.bashrc.d/"
-        	fi
-    		echo "Creating empty $user_home/.bashrc.d/"
-            # -p means mkdir will create folder if necessary
-            mkdir -p "$user_home/.bashrc.d/"
-            chown -R "$user:" "$user_home/.bashrc.d/" 
-    		chattr -R +i "$user_home/.bashrc.d/"
-    		if [ -d "$user_home/.config/environment.d/" ]; then
-                # Below is done to allow this process to reset the locked files
-                chattr -R -i "$user_home/.config/environment.d/"
-                rm -r "$user_home/.config/environment.d/"
-        	fi
-    		echo "Creating empty $user_home/.config/environment.d/"
-            # -p means mkdir will create folder if necessary
-         	mkdir -p "$user_home/.config/environment.d/"
-        	chown -R "$user:" "$user_home/.config/environment.d/"
-        	chattr -R +i "$user_home/.config/environment.d/"
+            BASH_FOLDERS=("$user_home/.bashrc.d/" "$user_home/.config/environment.d/")
+            for folder in "${BASH_FOLDERS[@]}"; do
+                if [ -d "$folder" ]; then
+                    # Below is done to allow this process to reset the locked files
+                    chattr -R -i "$folder"
+                    rm -r "$folder"
+                fi
+                echo "Creating empty $folder"
+                # -p means mkdir will create folder if necessary
+                mkdir -p "folder"
+                chown -R "$user:" "$folder" 
+    		    chattr -R +i "$folder"
+            done
      	else
      		if [ -d "$user_home/.bashrc.d/" ]; then	
     			chattr -R -i "$user_home/.bashrc.d/"
