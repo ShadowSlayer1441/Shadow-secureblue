@@ -212,22 +212,22 @@ toggle-bash-environment-lockdown:
     # $SUDO_USER is the user who started the script instead of whichever authorized it via polkit or the root home. From there this 
     # $USER_HOME uses getent to lookup their home directory to later check if they have an existing .bashrc file.
     USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-    if [[ ! -f "$USER_HOME/.bashrc" ]; then
+    if [[ ! -f "$USER_HOME/.bashrc" ]]; then
         echo "No $USER_HOME/.bashrc file found."
         echo "Would you like this script to create one or terminate execution?"
         read -r REPLY
         if [[ "$REPLY" != [yY]* ]]; then
-    	exit
+    	    exit
         fi
         # If .bashrc doesn't exist we can hardly unlock it, the script tells the user it intends to lock right below
         change_to_make="locked"
     else
         if lsattr "$USER_HOME/.bashrc" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
-            # "unlocked" means that the bash files are currently LOCKED, and this script will unlock them
+          # "unlocked" means that the bash files are currently LOCKED, and this script will unlock them
     	    change_to_make="unlocked"
     	    chattr -i "$USER_HOME/.bashrc"
         else
-            # "locked" means the bash files are currently UNLOCKED, and the script will lock them
+          # "locked" means the bash files are currently UNLOCKED, and the script will lock them
     	    change_to_make="locked"
     	    chattr +i "$USER_HOME/.bashrc"
         fi
@@ -252,45 +252,45 @@ toggle-bash-environment-lockdown:
     	user_home=$(getent passwd "$user" | awk -F':' '{ print $6}')
     	[[ -d "$user_home" ]] || {echo "Variable \$user_home for $user is somehow empty (check your getent passwd entries); safely exiting."; exit 1;}
     	if [ "$change_to_make" == "locked" ]; then
-            BASH_FOLDERS=("$user_home/.bashrc.d/" "$user_home/.config/environment.d/")
-            for folder in "${BASH_FOLDERS[@]}"; do
-                if [ -d "$folder" ]; then
-                    # Below is done to allow this process to reset the locked files
-                    chattr -R -i "$folder"
-                    rm -r "$folder"
-                fi
-                echo "Creating empty $folder"
-                # -p means mkdir will create folder if necessary
-                mkdir -p "folder"
-                chown -R "$user:" "$folder" 
-    		    chattr -R +i "$folder"
-            done
+        BASH_FOLDERS=("$user_home/.bashrc.d/" "$user_home/.config/environment.d/")
+        for folder in "${BASH_FOLDERS[@]}"; do
+          if [ -d "$folder" ]; then
+            # Below is done to allow this process to reset the locked files
+            chattr -R -i "$folder"
+            rm -r "$folder"
+          fi
+          echo "Creating empty $folder"
+          # -p means mkdir will create folder if necessary
+          mkdir -p "folder"
+          chown -R "$user:" "$folder" 
+    		  chattr -R +i "$folder"
+        done
      	else
      		if [ -d "$user_home/.bashrc.d/" ]; then	
     			chattr -R -i "$user_home/.bashrc.d/"
      		fi
     		if [ -d "$user_home/.config/environment.d/" ]; then
-            	chattr -R -i "$user_home/.config/environment.d/"
+          chattr -R -i "$user_home/.config/environment.d/"
      		fi
-        fi
+      fi
     	BASH_ENV_FILES=("$user_home/.bashrc" "$user_home/.bash_profile" "$user_home/.config/bash-completion" "$user_home/.profile" "$user_home/.bash_logout" "$user_home/.bash_login")
     	for file in "${BASH_ENV_FILES[@]}"; do
-            if [ -f "$file" ]; then
-                chattr -i "$file"
-            fi
-            if [ "$change_to_make" == "locked" ]; then
-                [ -f "$file" ] && rm "$file"
-                echo "Creating empty $file"
-                # Below will create a parent directory if necessary
-                install -D -o "$user" -g "$user" -m 600 "/dev/null" "$file" 
-            fi
-        done
+        if [ -f "$file" ]; then
+          chattr -i "$file"
+        fi
+        if [ "$change_to_make" == "locked" ]; then
+          [ -f "$file" ] && rm "$file"
+          echo "Creating empty $file"
+          # Below will create a parent directory if necessary
+          install -D -o "$user" -g "$user" -m 600 "/dev/null" "$file" 
+        fi
+      done
     	if [ "$change_to_make" == "unlocked" ]; then
-            echo "Bash environment '(" "${BASH_ENV_FILES[@]}" ")' is locked down. Unlocking it."
-            # In truth it's already unlocked, but *shrug*
-        else
-            echo "Bash environment '(" "${BASH_ENV_FILES[@]}" ")' is unlocked. Locking it."
-            echo "
+        echo "Bash environment '(" "${BASH_ENV_FILES[@]}" ")' is locked down. Unlocking it."
+        # In truth it's already unlocked, but *shrug*
+      else
+        echo "Bash environment '(" "${BASH_ENV_FILES[@]}" ")' is unlocked. Locking it."
+        echo "
     # .bashrc
 
     # Source global definitions
