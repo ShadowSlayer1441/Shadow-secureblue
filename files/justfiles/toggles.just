@@ -223,11 +223,11 @@ toggle-bash-environment-lockdown:
         change_to_make="locked"
     else
         if lsattr "$USER_HOME/.bashrc" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
-          # "unlocked" means that the bash files are currently LOCKED, and this script will unlock them
+            # "unlocked" means that the bash files are currently LOCKED, and this script will unlock them
     	    change_to_make="unlocked"
     	    chattr -i "$USER_HOME/.bashrc"
         else
-          # "locked" means the bash files are currently UNLOCKED, and the script will lock them
+            # "locked" means the bash files are currently UNLOCKED, and the script will lock them
     	    change_to_make="locked"
     	    chattr +i "$USER_HOME/.bashrc"
         fi
