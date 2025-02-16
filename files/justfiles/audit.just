@@ -341,7 +341,7 @@ audit-secureblue flatpak-question = "run_extra":
         print_status "$SECUREBOOT_TEST_STRING" "$STATUS_FAILURE"
     fi
 
-    if [[ "{{flatpak-question}}" != "skip" ]]; then
+    if [[ "{{ flatpak-question }}" != "skip" ]]; then
         if command -v flatpak &> /dev/null; then
             remotes="$(flatpak remotes -d)"
             while read -r remote ; do
