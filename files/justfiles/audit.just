@@ -1,5 +1,5 @@
 # Audit secureblue
-audit-secureblue flatpak-question = "run_extra":
+audit-secureblue flatpak-question="run_extra":
     #!/bin/bash
 
     STATUS_SUCCESS="SUCCESS"
