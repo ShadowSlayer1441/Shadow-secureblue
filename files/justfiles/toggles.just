@@ -316,3 +316,38 @@ toggle-mac-randomization:
         echo "MAC randomization enabled."
         systemctl restart NetworkManager
     fi
+
+# Enabled using FIDO UF2 keys for user authentication via PAM
+fido-PAM toggle="toggle":
+    #! /bin/run0 /bin/bash
+    set -eou pipefail
+    if [[ "{{ toggle }}" != "sufficient" ]] || [[ "{{ toggle }}" != "required" ]]; then
+        echo "Do you want FIDO UF2 key authentication to be required (essentially making it MFA for the chosen account)" 
+        echo "or sufficient (allowing it to replace a password, potentially one much longer than would otherwise be practical)?"
+        echo ""
+        echo "WARNING: if FIDO UF2 key authentication is required, you can run into problems with not being able to authenticate"
+        echo "if for example you enabled usbguard without having the hardware key plugged in. This can be especially problematic if"
+        echo "you require FIDO U2 authentication for your sole wheel user. [sufficient/required]"
+        read -r CHOICE
+        if [ "$CHOICE" == [sS]* ]; then
+            choice="sufficient"
+        else
+            choice="required"
+        fi
+    else
+        choice="{{ toggle }}"
+    fi
+    if [ "$choice" = "sufficient" ]; then
+        echo "
+#%PAM-1.0
+auth       sufficient     pam_u2f.so" > "/etc/pam.d/u2f-sufficient"
+    else
+        echo "
+#%PAM-1.0
+auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
+    fi
+    if authselect current | grep -q 'with-pam-u2f'; then
+        :
+    else
+        authselect select "$(authselect current) with-pam-u2f"
+    fi
