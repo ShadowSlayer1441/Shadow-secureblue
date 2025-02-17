@@ -212,28 +212,14 @@ toggle-bash-environment-lockdown:
     # $SUDO_USER is the user who started the script instead of whichever authorized it via polkit or the root home. From there this 
     # $USER_HOME uses getent to lookup their home directory to later check if they have an existing .bashrc file.
     USER_HOME=$(getent passwd $SUDO_USER | cut -d: -f6)
-    if [[ ! -f "$USER_HOME/.bashrc" ]]; then
-        echo "No $USER_HOME/.bashrc file found."
-        echo "Would you like this script to create one or terminate execution?"
-        read -r REPLY
-        if [[ "$REPLY" != [yY]* ]]; then
-    	    exit
-        fi
-        # If .bashrc doesn't exist we can hardly unlock it, the script tells the user it intends to lock right below
-        change_to_make="locked"
+    if lsattr "$USER_HOME/.bashrc" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
+      pending_status="unlocked"
     else
-        if lsattr "$USER_HOME/.bashrc" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
-            # "unlocked" means that the bash files are currently LOCKED, and this script will unlock them
-    	    change_to_make="unlocked"
-    	    chattr -i "$USER_HOME/.bashrc"
-        else
-            # "locked" means the bash files are currently UNLOCKED, and the script will lock them
-    	    change_to_make="locked"
-    	    chattr +i "$USER_HOME/.bashrc"
-        fi
+      pending_status="locked"
+    fi
     echo "${b}WARNING${n} This will overwrite your ~/.bashrc, ~/.bash_profile, ~/.config/bash-completion, ~/.profile, ~/.bash_logout, ~/.bash_login, ~/.bashrc.d/, and ~/.config/environment.d/"
     echo "This is needed to ensure the mitigation is effective."
-    echo ".bashrc, .bash_profile, and more will be ""${b}""$change_to_make""${n}""."
+    echo ".bashrc, .bash_profile, and more will be ""${b}""$pending_status""${n}""."
     echo "Do you understand?"
     echo "Please type in \"YES I UNDERSTAND\" and press enter"
     read -r ACCEPT
@@ -247,87 +233,49 @@ toggle-bash-environment-lockdown:
     if [[ "$REPLY" != [yY]* ]]; then
     	user_list=("$SUDO_USER")
     fi
+
+    chattr_operator=$([ "$pending_status" == "locked" ] && echo "+i" || echo "-i")  
     for user in "${user_list[@]}"; do
-    	echo "Working user:$user"
+    	echo "Applying for user: $user"
     	user_home=$(getent passwd "$user" | awk -F':' '{ print $6}')
     	[[ -d "$user_home" ]] || {echo "Variable \$user_home for $user is somehow empty (check your getent passwd entries); safely exiting."; exit 1;}
-    	if [ "$change_to_make" == "locked" ]; then
-        BASH_FOLDERS=("$user_home/.bashrc.d/" "$user_home/.config/environment.d/")
-        for folder in "${BASH_FOLDERS[@]}"; do
-          if [ -d "$folder" ]; then
-            # Below is done to allow this process to reset the locked files
-            chattr -R -i "$folder"
-            rm -r "$folder"
-          fi
-          echo "Creating empty $folder"
-          # -p means mkdir will create folder if necessary
-          mkdir -p "folder"
-          chown -R "$user:" "$folder" 
-    		  chattr -R +i "$folder"
-        done
-     	else
-     		if [ -d "$user_home/.bashrc.d/" ]; then	
-    			chattr -R -i "$user_home/.bashrc.d/"
-     		fi
-    		if [ -d "$user_home/.config/environment.d/" ]; then
-          chattr -R -i "$user_home/.config/environment.d/"
-     		fi
-      fi
-    	BASH_ENV_FILES=("$user_home/.bashrc" "$user_home/.bash_profile" "$user_home/.config/bash-completion" "$user_home/.profile" "$user_home/.bash_logout" "$user_home/.bash_login")
-    	for file in "${BASH_ENV_FILES[@]}"; do
-        if [ -f "$file" ]; then
-          chattr -i "$file"
-        fi
-        if [ "$change_to_make" == "locked" ]; then
-          [ -f "$file" ] && rm "$file"
-          echo "Creating empty $file"
-          # Below will create a parent directory if necessary
-          install -D -o "$user" -g "$user" -m 600 "/dev/null" "$file" 
-        fi
-      done
-    	if [ "$change_to_make" == "unlocked" ]; then
-        echo "Bash environment '(" "${BASH_ENV_FILES[@]}" ")' is locked down. Unlocking it."
-        # In truth it's already unlocked, but *shrug*
-      else
-        echo "Bash environment '(" "${BASH_ENV_FILES[@]}" ")' is unlocked. Locking it."
-        echo "
-    # .bashrc
 
-    # Source global definitions
-    if [ -f /etc/bashrc ]; then
-        . /etc/bashrc
-    fi
+      BASH_ENV_FILES=(
+        "$user_home/.bashrc"
+        "$user_home/.bash_profile"
+        "$user_home/.config/bash-completion"
+        "$user_home/.profile"
+        "$user_home/.bash_logout"
+        "$user_home/.bash_login"
+      )
 
-    # User specific environment
-    if ! [[ "\$PATH" =~ "\$HOME/.local/bin:\$HOME/bin:" ]]; then
-        PATH="\$HOME/.local/bin:\$HOME/bin:\$PATH"
-    fi
-    export PATH
+      BASH_ENV_DIRS=(
+        "$user_home/.bashrc.d/"
+        "$user_home/.config/environment.d/"
+      )
 
-    # Uncomment the following line if you don't like systemctl's auto-paging feature:
-    # export SYSTEMD_PAGER=
-
-    unset rc
-          " > "$user_home/.bashrc"
-
-        echo "
-    # .bash_profile
-
-    # Get the aliases and functions
-    if [ -f ~/.bashrc ]; then
-        . ~/.bashrc
-    fi
-
-    # User specific environment and startup programs
-        " > "$user_home/.bash_profile"
+      if [ "$pending_status" == "locked" ]; then
         for file in "${BASH_ENV_FILES[@]}"; do
-            chattr +i "$file"
+          rm "$file"
+          touch "$file"
         done
-    fi 
-    # Inside for loop over all $user_list (don't want to mess with the indentation for the default .bashrc and .bash_profiles)
+        cp /usr/share/secureblue/templates/.bash_profile "$user_home/.bash_profile"
+        cp /usr/share/secureblue/templates/.bashrc "$user_home/.bashrc"
+      fi
+
+      for dir in "${BASH_ENV_DIRS[@]}"; do
+          mkdir -p "$dir"
+      done
+
+      BASH_ENV_FILES_DIRS=("${BASH_ENV_FILES[@]}" "${BASH_ENV_DIRS[@]}")
+
+      for fs_object in "${BASH_ENV_FILES_DIRS[@]}"; do
+        recursion_operator=$([ -d "$fs_object" ] && echo "-R" || echo "")  
+        chattr "$chattr_operator" "$recursion_operator" "$fs_object"
+      done
     done
-    # Outside for loop over all $user_list
-    echo "${user_list[@]}" "$change_to_make."
+
+    echo "${user_list[@]}" "$pending_status."
     echo "WARNING: until a reboot, any process with an open file descriptor will continue to have the access they had before this script was run."
 
 # Toggle unconfined domain userns creation
