@@ -1,5 +1,5 @@
 # Audit secureblue
-audit-secureblue flatpak-question="run_extra":
+audit-secureblue AUDIT_FLATPAKS="true":
     #!/bin/bash
 
     STATUS_SUCCESS="SUCCESS"
@@ -341,7 +341,7 @@ audit-secureblue flatpak-question="run_extra":
         print_status "$SECUREBOOT_TEST_STRING" "$STATUS_FAILURE"
     fi
 
-    if [[ "{{ flatpak-question }}" != "skip" ]]; then
+    if [[ "{{ flatpak-question }}" != "true" ]]; then
         if command -v flatpak &> /dev/null; then
             remotes="$(flatpak remotes -d)"
             while read -r remote ; do
@@ -443,4 +443,4 @@ audit-secureblue flatpak-question="run_extra":
         done
         echo
     done
-    echo "${b}Run 'ujust audit-secureblue skip' to skip flatpak recommendations.${n}"
+    echo "${b}Run 'ujust audit-secureblue false' to skip flatpak recommendations.${n}"
