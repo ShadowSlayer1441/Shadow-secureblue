@@ -331,7 +331,7 @@ audit-secureblue:
             print_status "$BASH_ENV_STRING" "$STATUS_SUCCESS"
     else
             print_status "$BASH_ENV_STRING" "$STATUS_FAILURE"
-            formatted_unlocked_files=$(echo "${Unlocked_Files[@]}" | tr ' ' '\t') # sed 's/ /\t/') # | sed 's/,*$//')
+            formatted_unlocked_files=$(echo "${Unlocked_Files[@]}" | tr ' ' '\t')
             suggestions+=("Bash environment is not locked down; The following files do not appear to be immutable or do not exist:	$formatted_unlocked_files	To fix run:	$ ujust toggle-bash-environment-lockdown")
     fi
 
