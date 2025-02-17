@@ -240,31 +240,6 @@ audit-secureblue:
         fi
     fi
 
-    BASH_TEST_STRING="Ensuring bash environment lockdown"
-    BASH_ENV_FILES=(~/.bashrc ~/.bash_profile)
-    all_locked=1
-
-    for file in "${BASH_ENV_FILES[@]}"; do
-        if [ -f "$file" ]; then
-            if lsattr "$file" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
-                continue
-            else
-                all_locked=0
-                break
-            fi
-        else
-            all_locked=0
-            break
-        fi
-    done
-
-    if [ "$all_locked" -eq 1 ]; then
-        print_status "$BASH_TEST_STRING" "$STATUS_SUCCESS"
-    else
-        print_status "$BASH_TEST_STRING" "$STATUS_FAILURE"
-        suggestions+=("The bash environment is not locked down	Run:	$ ujust toggle-bash-environment-lockdown")
-    fi
-
     WHEEL_TEST_STRING="Ensuring user is not a member of wheel"
     if groups | grep -q "\bwheel\b"; then
         print_status "$WHEEL_TEST_STRING" "$STATUS_FAILURE"
@@ -351,7 +326,7 @@ audit-secureblue:
         else
             immut="false"
         fi
-        if [[ ! -a "$file" ]] || [ "$immut" != "true" ]; then
+        if [[ ! -a "$file" ]] || [[ -z "$(lsattr "$file" 2>/dev/null | awk '{print $1}' | grep 'i')" ]]; then
             BASH_ENV_STATUS="unlocked"
             Unlocked_Files+=("$file")
         fi
