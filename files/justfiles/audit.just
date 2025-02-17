@@ -240,13 +240,6 @@ audit-secureblue:
         fi
     fi
 
-    if [ "$all_locked" -eq 1 ]; then
-        print_status "$BASH_TEST_STRING" "$STATUS_SUCCESS"
-    else
-        print_status "$BASH_TEST_STRING" "$STATUS_FAILURE"
-        suggestions+=("The bash environment is not locked down	Run:	$ ujust toggle-bash-environment-lockdown")
-    fi
-
     WHEEL_TEST_STRING="Ensuring user is not a member of wheel"
     if groups | grep -q "\bwheel\b"; then
         print_status "$WHEEL_TEST_STRING" "$STATUS_FAILURE"
