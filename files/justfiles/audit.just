@@ -351,9 +351,7 @@ audit-secureblue:
         else
             immut="false"
         fi
-        if [ -f "$file" ] && [ "$immut" == "true" ]; then
-            :
-        else
+        if [[ ! -a "$file" ]] || [ "$immut" != "true" ]; then
             BASH_ENV_STATUS="unlocked"
             Unlocked_Files+=("$file")
         fi
