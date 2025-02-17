@@ -254,11 +254,11 @@ toggle-bash-environment-lockdown:
         "$user_home/.config/environment.d/"
       )
 
-      for file in "${BASH_ENV_FILES[@]}"; do
-        touch "$file"
-      done
-
       if [ "$pending_status" == "locked" ]; then
+        for file in "${BASH_ENV_FILES[@]}"; do
+          rm "$file"
+          touch "$file"
+        done
         cp /usr/share/secureblue/templates/.bash_profile "$user_home/.bash_profile"
         cp /usr/share/secureblue/templates/.bashrc "$user_home/.bashrc"
       fi
