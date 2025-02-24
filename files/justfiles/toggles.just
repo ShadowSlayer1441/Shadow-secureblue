@@ -218,6 +218,7 @@ toggle-bash-environment-lockdown:
       pending_status="locked"
     fi
     echo "${b}WARNING${n} This will overwrite your ~/.bashrc, ~/.bash_profile, ~/.config/bash-completion, ~/.profile, ~/.bash_logout, ~/.bash_login, ~/.bashrc.d/, and ~/.config/environment.d/"
+    echo "This script will create backups of the old versions with the time of script execution appended."
     echo "This is needed to ensure the mitigation is effective."
     echo ".bashrc, .bash_profile, and more will be ""${b}""$pending_status""${n}""."
     echo "Do you understand?"
@@ -255,7 +256,9 @@ toggle-bash-environment-lockdown:
       )
 
       if [ "$pending_status" == "locked" ]; then
+        current_time=$(date -Iminutes | tr ' ' '_')
         for file in "${BASH_ENV_FILES[@]}"; do
+          cp --preserve=all "$file" "$file_$current_time"
           rm "$file"
           touch "$file"
         done
@@ -264,7 +267,9 @@ toggle-bash-environment-lockdown:
       fi
 
       for dir in "${BASH_ENV_DIRS[@]}"; do
-          mkdir -p "$dir"
+          cp --preserve=all -r "$dir" "$dir_$current_time"
+          rm -r "$dir"
+          mkdir "$dir"
       done
 
       BASH_ENV_FILES_DIRS=("${BASH_ENV_FILES[@]}" "${BASH_ENV_DIRS[@]}")
