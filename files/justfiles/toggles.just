@@ -264,12 +264,15 @@ toggle-bash-environment-lockdown:
         done
         cp /usr/share/secureblue/templates/.bash_profile "$user_home/.bash_profile"
         cp /usr/share/secureblue/templates/.bashrc "$user_home/.bashrc"
-      fi
-
-      for dir in "${BASH_ENV_DIRS[@]}"; do
+        for dir in "${BASH_ENV_DIRS[@]}"; do
           cp --preserve=all -r "$dir" "$dir_$current_time"
           rm -r "$dir"
           mkdir "$dir"
+        done
+        fi
+
+      for dir in "${BASH_ENV_DIRS[@]}"; do
+          mkdir -p "$dir"
       done
 
       BASH_ENV_FILES_DIRS=("${BASH_ENV_FILES[@]}" "${BASH_ENV_DIRS[@]}")
