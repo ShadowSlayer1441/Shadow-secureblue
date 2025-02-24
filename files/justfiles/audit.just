@@ -341,7 +341,7 @@ audit-secureblue AUDIT_FLATPAKS="true":
         print_status "$SECUREBOOT_TEST_STRING" "$STATUS_FAILURE"
     fi
 
-    if [[ "{{ AUDIT_FLATPAKS }}" != "true" ]]; then
+    if [[ "{{ AUDIT_FLATPAKS }}" == "true" ]]; then
         if command -v flatpak &> /dev/null; then
             remotes="$(flatpak remotes -d)"
             while read -r remote ; do
