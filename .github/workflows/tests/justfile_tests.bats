@@ -31,6 +31,7 @@ setup() {
 }
 
 @test "Ensure bash lockdown works" {
+    cat /usr/bin/ujust
     BASH_ENV_FILES=(
         "$HOME/.bashrc"
         "$HOME/.bash_profile"
