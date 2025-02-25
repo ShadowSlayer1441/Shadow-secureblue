@@ -340,13 +340,13 @@ fido-PAM-enable toggle="toggle":
         choice="{{ toggle }}"
     fi
     if [ "$choice" = "sufficient" ]; then
-        echo "
+        echo '
 #%PAM-1.0
-auth       sufficient     pam_u2f.so" > "/etc/pam.d/u2f-sufficient"
+auth       sufficient     pam_u2f.so' > "/etc/pam.d/u2f-sufficient"
     else
-        echo "
+        echo '
 #%PAM-1.0
-auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
+auth       required     pam_u2f.so' > "/etc/pam.d/u2f-required"
     fi
     if authselect current | grep -q 'with-pam-u2f'; then
         :
