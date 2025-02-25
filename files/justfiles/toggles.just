@@ -319,7 +319,7 @@ toggle-mac-randomization:
         systemctl restart NetworkManager
     fi
 
-# Enabling using FIDO UF2 keys for user authentication via PAM
+# Enabling using FIDO UF2 keys for user authentication for PAM (run0,systemd, polkit, etc)
 fido-PAM-enable toggle="toggle":
     #! /bin/run0 /bin/bash
     set -eou pipefail
@@ -418,7 +418,7 @@ auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
     fi
     echo "FIDO UF2 authentication is now $choice for PAM authentication. Congratulations!"
 
-# Disabling using FIDO UF2 keys for user authentication via PAM
+# Disabling using FIDO UF2 keys for user authentication for PAM (run0,systemd, polkit, etc)
 fido-PAM-disable:
     #! /bin/run0 /bin/bash
     set -eou pipefail
@@ -436,4 +436,4 @@ fido-PAM-disable:
     fi
     echo "FIDO UF2 authentication is now disabled for PAM authentication. Congratulations!"
     echo "Note your configured yubikeys have not been removed and are stored at ~/.config/Yubico/u2f_keys"
-        
+
