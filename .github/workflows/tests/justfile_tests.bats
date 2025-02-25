@@ -5,8 +5,7 @@ setup() {
     sudo mkdir -p /usr/share/bluebuild/justfiles/
     sudo mkdir -p /usr/lib/ujust/
 
-    sudo chmod +x /usr/bin/ujust
-    sudo echo "/usr/bin/just --justfile /usr/share/ublue-os/justfile \"\${@}\"" >> /usr/bin/ujust
+    alias ujust='just'
     sudo cp -fr files/system/usr/lib/ujust /usr/lib/ujust
     sudo cp -f files/system/usr/bin/ujust /usr/bin/ujust
     sudo cp -f files/system/usr/share/ublue-os/just/60-custom.just /usr/share/ublue-os/just/
