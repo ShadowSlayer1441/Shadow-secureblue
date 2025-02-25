@@ -199,7 +199,7 @@ toggle-xwayland ACTION="prompt":
 
 # Toggle bash environment lockdown (mitigates LD_PRELOAD attacks)
 toggle-bash-environment-lockdown skip_approval="false" multiuser="false":
-    #! run0 /usr/bin/bash
+    #! [ -n "$(command -v sudo)" ] && sudo bash || run0 bash
     set -eou pipefail
     # The below lines fetch the minimium and maximium UIDS as configured in /etc/login.defs. Any UIDs within this change are true user ids
     # rather than system agents, and therefore should be locked down. The user_string variable uses this fetched UID range to find all 
