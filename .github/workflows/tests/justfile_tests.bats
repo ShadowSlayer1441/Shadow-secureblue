@@ -14,6 +14,7 @@ setup() {
     for filepath in /usr/share/bluebuild/justfiles/*.just; do
         sudo sh -c "echo \"import '$filepath'\" >> /usr/share/ublue-os/just/60-custom.just"
     done
+    sudo apt-get install run0
 }
 
 @test "Ensure ujust is configured correctly for tests" {
@@ -45,13 +46,13 @@ setup() {
       )
     for file in "${BASH_ENV_FILES[@]}"; do
         before=$(lsattr "$file" 2>/dev/null)
-        sudo ujust --set shell "sudo /usr/bin/bash" toggle-bash-environment-lockdown true false
+        ujust toggle-bash-environment-lockdown true false
         after=$(lsattr "$HOME/.bashrc" 2>/dev/null)
         [[ "$before" == "$after" ]] && exit 1 
     done
     for dir in "${BASH_ENV_DIRS[@]}"; do
         before=$(lsattr  -a "$dir" 2>/dev/null | grep -c 'i----')
-        sudo ujust --set shell "sudo /usr/bin/bash" toggle-bash-environment-lockdown true false
+        ujust toggle-bash-environment-lockdown true false
         after=$(lsattr  -a "$dir" 2>/dev/null | grep -c 'i----')
         [[ "$before" == "$after" ]] && exit 1 
     done
