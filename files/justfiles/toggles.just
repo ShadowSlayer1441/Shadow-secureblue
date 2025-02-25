@@ -417,7 +417,7 @@ auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
         rm /etc/tmp.yubikey
     fi
     echo "FIDO UF2 authentication is now $choice for PAM authentication. Congratulations!"
-        
+
 # Disabling using FIDO UF2 keys for user authentication via PAM
 fido-PAM-disable:
     #! /bin/run0 /bin/bash
