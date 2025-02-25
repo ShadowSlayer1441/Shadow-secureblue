@@ -319,8 +319,8 @@ toggle-mac-randomization:
         systemctl restart NetworkManager
     fi
 
-# Enabled using FIDO UF2 keys for user authentication via PAM
-fido-PAM toggle="toggle":
+# Enabling using FIDO UF2 keys for user authentication via PAM
+fido-PAM-enable toggle="toggle":
     #! /bin/run0 /bin/bash
     set -eou pipefail
     if [[ "{{ toggle }}" != "sufficient" ]] || [[ "{{ toggle }}" != "required" ]]; then
@@ -351,5 +351,89 @@ auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
     if authselect current | grep -q 'with-pam-u2f'; then
         :
     else
-        authselect select "$(authselect current) with-pam-u2f"
+        authselect select "$(authselect current) with-pam-u2f".
     fi
+    echo "Do you will to add this yubikey to every user (all users if required has been selected)? [y/N]"
+    read -r ACCEPT
+    echo "Time to add your yubikey to your currently logged in user. Insert and tap it when it flashes."
+    pamu2fcfg > /etc/tmp.yubikey
+    if [ "$choice" = "required" ] || [[ "$ACCEPT" != [yY]* ]]; then
+        uid_min=$(grep -Po '^\s*UID_MIN\s+\K\d+' /etc/login.defs)
+        uid_max=$(grep -Po '^\s*UID_MAX\s+\K\d+' /etc/login.defs)
+        user_string=$(getent passwd | awk -F':' -v max="$uid_max" -v min="$uid_min" 'max >= $3 && $3 >= min {print $1}' | tr '\n' ',' | sed 's/,*$//')
+        IFS=',' read -ra user_list <<< "$user_string"
+        for user in "${user_list[@]}"; do
+    	    user_home=$(getent passwd "$user" | awk -F':' '{ print $6}')
+    	    [[ -d "$user_home" ]] || {echo "Variable \$user_home for $user is somehow empty (check your getent passwd entries); safely exiting."; exit 1;}
+            mkdir -p "$user_home/.config/Yubico"
+            if [ -f "$user_home/.config/Yubico/u2f_keys" ]; then
+                echo "Currently configured FIDO UF2 keys detected. Do you wish to overwrite them or append your new key? [overwrite/append]"
+                read -r KEYS
+                if [ "$KEYS" != "overwrite" ] && [ "$KEYS" == "append" ]; then
+                    echo "Error: invalid input detected"
+                fi
+                if [ "$KEYS" == "overwrite" ]; then
+                    chattr -i "$user_home/.config/Yubico/u2f_keys"
+                    cp /etc/tmp.yubikey "$user_home/.config/Yubico/u2f_keys"
+                    chattr -R +i "$user_home/.config/Yubico/
+                fi
+                if [ "$KEYS" == "append" ]; then
+                    chattr -i "$user_home/.config/Yubico/u2f_keys"
+                    echo /etc/tmp.yubikey >> "$user_home/.config/Yubico/u2f_keys"
+                    chattr -R +i "$user_home/.config/Yubico/
+                fi
+            else
+                # We remove -i just incase the folder already exists, is in use for something else, and is immutable
+                chattr -i "$user_home/.config/Yubico/
+                cp /etc/tmp.yubikey "$user_home/.config/Yubico/u2f_keys"
+                chattr -R +i "$user_home/.config/Yubico/
+            fi
+        done
+        rm /etc/tmp.yubikey
+    else
+        mkdir -p "$user_home/.config/Yubico"
+        if [ -f "$user_home/.config/Yubico/u2f_keys" ]; then
+            echo "Currently configured FIDO UF2 keys detected. Do you wish to overwrite them or append your new key? [overwrite/append]"
+            read -r KEYS
+            if [ "$KEYS" != "overwrite" ] && [ "$KEYS" == "append" ]; then
+                echo "Error: invalid input detected"
+            fi
+            if [ "$KEYS" == "overwrite" ]; then
+                chattr -i "$user_home/.config/Yubico/u2f_keys"
+                cp /etc/tmp.yubikey "$user_home/.config/Yubico/u2f_keys"
+                chattr -R +i "$user_home/.config/Yubico/
+            fi
+            if [ "$KEYS" == "append" ]; then
+                chattr -i "$user_home/.config/Yubico/u2f_keys"
+                echo /etc/tmp.yubikey >> "$user_home/.config/Yubico/u2f_keys"
+                chattr -R +i "$user_home/.config/Yubico/
+            fi
+        else
+            # We remove -i just incase the folder already exists, is in use for something else, and is immutable
+            chattr -i "$user_home/.config/Yubico/
+            cp /etc/tmp.yubikey "$user_home/.config/Yubico/u2f_keys"
+            chattr -R +i "$user_home/.config/Yubico/
+        fi
+        rm /etc/tmp.yubikey
+    fi
+    echo "FIDO UF2 authentication is now $choice for PAM authentication. Congratulations!"
+        
+# Disabling using FIDO UF2 keys for user authentication via PAM
+fido-PAM-disable:
+    #! /bin/run0 /bin/bash
+    set -eou pipefail
+    echo "Do you want FIDO UF2 key authentication to be removed? [y/N]"
+    read -r CHOICE
+    if [ "$CHOICE" == [nN]* ]; then
+        exit
+    fi
+    [ -f "/etc/pam.d/u2f-sufficient" ] && rm "/etc/pam.d/u2f-sufficient" 
+    [ -f "/etc/pam.d/u2f-required" ] && rm "/etc/pam.d/u2f-required"
+    if authselect current | grep -q 'with-pam-u2f'; then
+        new_authselect=$(authselect current | sed 's/with-pam-u2f//')
+        [ -z "$new_authselect"] && { echo "authselect without fido authentication appears to be nothing, check authselect current"; exit 1;}
+        authselect select "$new_authselect"
+    fi
+    echo "FIDO UF2 authentication is now disabled for PAM authentication. Congratulations!"
+    echo "Note your configured yubikeys have not been removed and are stored at ~/.config/Yubico/u2f_keys"
+        
