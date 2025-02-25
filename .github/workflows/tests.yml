@@ -24,7 +24,8 @@ jobs:
            file-path: "${{ github.workspace }}/.bats/bats-file"
       
       - name: Install just
-        run: |          
+        run: |   
+          sudo apt-get update
           sudo apt-get install just
 
       - name: Run tests
