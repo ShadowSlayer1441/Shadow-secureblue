@@ -31,7 +31,6 @@ setup() {
 }
 
 @test "Ensure bash lockdown works" {
-    echo "$(just -V)"
     BASH_ENV_FILES=(
         "$HOME/.bashrc"
         "$HOME/.bash_profile"
