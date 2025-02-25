@@ -118,7 +118,7 @@ else
 fi
 
 echo "Congratulations!"
-echo "Your system is now configured to use FIDO2 unlocking via the hardware key you used earlier. If you previously used TPM luks unlocking, ensure you run 'ujust remove-luks-tpm-unlock'. Otherwise, the system will likely default to TPM auto-unlocking on boot."
+echo "Your system is now configured to use FIDO2 unlocking via the hardware key you used earlier. If you previously used TPM luks unlocking, ensure you run 'ujust remove-luks-tpm-unlock'. Otherwise, the system will continue to accept the comparatively insecure tpm credentials."
 echo ""
 echo "REMINDER: Store on another computer, on an encrypted drive, the script created backup key (which is at /var/home/$SUDO_USER/Desktop/luks_backup_key.txt)"
 
