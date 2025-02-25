@@ -5,7 +5,6 @@ setup() {
     sudo mkdir -p /usr/share/bluebuild/justfiles/
     sudo mkdir -p /usr/lib/ujust/
 
-    alias ujust='just'
     sudo cp -fr files/system/usr/lib/ujust /usr/lib/ujust
     sudo cp -f files/system/usr/bin/ujust /usr/bin/ujust
     sudo cp -f files/system/usr/share/ublue-os/just/60-custom.just /usr/share/ublue-os/just/
@@ -14,6 +13,7 @@ setup() {
     for filepath in /usr/share/bluebuild/justfiles/*.just; do
         sudo sh -c "echo \"import '$filepath'\" >> /usr/share/ublue-os/just/60-custom.just"
     done
+    alias ujust='just'
 }
 
 @test "Ensure ujust is configured correctly for tests" {
@@ -31,7 +31,6 @@ setup() {
 }
 
 @test "Ensure bash lockdown works" {
-    cat /usr/bin/ujust
     BASH_ENV_FILES=(
         "$HOME/.bashrc"
         "$HOME/.bash_profile"
