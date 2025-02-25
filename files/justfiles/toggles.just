@@ -432,4 +432,3 @@ fido-PAM-disable:
     fi
     echo "FIDO UF2 authentication is now disabled for PAM authentication. Congratulations!"
     echo "Note your configured yubikeys have not been removed and are stored at ~/.config/Yubico/u2f_keys"
-
