@@ -375,7 +375,7 @@ auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
                 if [ "$KEYS" == "overwrite" ]; then
                     chattr -i "$user_home/.config/Yubico/u2f_keys"
                     cp /etc/tmp.yubikey "$user_home/.config/Yubico/u2f_keys"
-                    chattr -R +i "$user_home/.config/Yubico/
+                    chattr -R +i "$user_home/.config/Yubico/"
                 fi
                 if [ "$KEYS" == "append" ]; then
                     chattr -i "$user_home/.config/Yubico/u2f_keys"
