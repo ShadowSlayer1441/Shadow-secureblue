@@ -14,7 +14,6 @@ setup() {
     for filepath in /usr/share/bluebuild/justfiles/*.just; do
         sudo sh -c "echo \"import '$filepath'\" >> /usr/share/ublue-os/just/60-custom.just"
     done
-    alias run0='sudo'
 }
 
 @test "Ensure ujust is configured correctly for tests" {
@@ -32,7 +31,7 @@ setup() {
 }
 
 @test "Ensure bash lockdown works" {
-    alias run0='sudo'
+    just -V
     BASH_ENV_FILES=(
         "$HOME/.bashrc"
         "$HOME/.bash_profile"
