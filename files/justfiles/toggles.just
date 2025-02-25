@@ -197,8 +197,8 @@ toggle-xwayland ACTION="prompt":
       fi
     fi
 
-
 bang := if require("sudo") != "" { "sudo bash" } else { "run0 bash" }
+
 # Toggle bash environment lockdown (mitigates LD_PRELOAD attacks)
 toggle-bash-environment-lockdown skip_approval="false" multiuser="false":
     #! {{ "bang" }}
