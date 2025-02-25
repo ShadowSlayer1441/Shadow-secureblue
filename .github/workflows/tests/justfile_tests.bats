@@ -45,16 +45,14 @@ setup() {
       )
     for file in "${BASH_ENV_FILES[@]}"; do
         before=$(lsattr "$file" 2>/dev/null)
-        run bash -c "echo -e 'YES I UNDERSTAND\ny' | sudo ujust --set shell "sudo /usr/bin/bash" toggle-bash-environment-lockdown"
-        [ "$status" -eq 0 ]
+        echo -e 'YES I UNDERSTAND\ny' | sudo ujust --set shell "sudo /usr/bin/bash" toggle-bash-environment-lockdown
         after=$(lsattr "$HOME/.bashrc" 2>/dev/null)
         [[ "$before" == "$after" ]] && exit 1 
     done
     for dir in "${BASH_ENV_DIRS[@]}"; do
-        before=$(lsattr  -a "$dir" 2>/dev/null)
-        run bash -c "echo -e 'YES I UNDERSTAND\ny' | sudo ujust --set shell "sudo /usr/bin/bash" toggle-bash-environment-lockdown"
-        [ "$status" -eq 0 ]
-        after=$(lsattr  -a "$dir" 2>/dev/null)
+        before=$(lsattr  -a "$dir" 2>/dev/null | grep -c 'i----')
+        echo -e 'YES I UNDERSTAND\ny' | sudo ujust --set shell "sudo /usr/bin/bash" toggle-bash-environment-lockdown
+        after=$(lsattr  -a "$dir" 2>/dev/null | grep -c 'i----')
         [[ "$before" == "$after" ]] && exit 1 
     done
 }
