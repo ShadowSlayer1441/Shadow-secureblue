@@ -198,7 +198,7 @@ toggle-xwayland ACTION="prompt":
     fi
 
 # Toggle bash environment lockdown (mitigates LD_PRELOAD attacks)
-toggle-bash-environment-lockdown skip_approval=false multiuser=false:
+toggle-bash-environment-lockdown skip_approval="false" multiuser="false":
     #! /bin/run0 /usr/bin/bash
     set -eou pipefail
     # The below lines fetch the minimium and maximium UIDS as configured in /etc/login.defs. Any UIDs within this change are true user ids
