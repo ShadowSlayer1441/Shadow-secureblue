@@ -22,10 +22,9 @@ jobs:
            assert-path: "${{ github.workspace }}/.bats/bats-assert"
            detik-path: "${{ github.workspace }}/.bats/bats-detik"
            file-path: "${{ github.workspace }}/.bats/bats-file"
-      
-      - name: Install just
-        run: |   
-          sudo apt-get install just=1.39
+
+      - name: Just Installation
+        uses: extractions/setup-just@v2
 
       - name: Run tests
         shell: bash
