@@ -198,7 +198,7 @@ toggle-xwayland ACTION="prompt":
     fi
 
 # Toggle bash environment lockdown (mitigates LD_PRELOAD attacks)
-toggle-bash-environment-lockdown:
+toggle-bash-environment-lockdown skip_approval=false multiuser=false:
     #! /bin/run0 /usr/bin/bash
     set -eou pipefail
     # The below lines fetch the minimium and maximium UIDS as configured in /etc/login.defs. Any UIDs within this change are true user ids
@@ -223,16 +223,20 @@ toggle-bash-environment-lockdown:
     echo ".bashrc, .bash_profile, and more will be ""${b}""$pending_status""${n}""."
     echo "Do you understand?"
     echo "Please type in \"YES I UNDERSTAND\" and press enter"
-    read -r ACCEPT
-    if [ "$ACCEPT" != "YES I UNDERSTAND" ]; then
-        exit
+    if [ "{{ skip_approval }}" == "false" ]; then
+        read -r ACCEPT
+        if [ "$ACCEPT" != "YES I UNDERSTAND" ]; then
+            exit
+        fi
     fi
     echo "Do you want this change to apply to ""${b}""all""${n}"" users (""${user_list[@]}"")? [y/N]"
     echo "Otherwise, it will only apply to the user who launched this script ($SUDO_USER)."
-    read -r REPLY
-    # Note this way the default if you press enter is to only effect the user who launched this script
-    if [[ "$REPLY" != [yY]* ]]; then
-    	user_list=("$SUDO_USER")
+    if [ "{{ multiuser }}" == "false" ]; then
+        read -r REPLY
+        # Note this way the default if you press enter is to only effect the user who launched this script
+        if [[ "$REPLY" != [yY]* ]]; then
+    	    user_list=("$SUDO_USER")
+        fi
     fi
 
     chattr_operator=$([ "$pending_status" == "locked" ] && echo "+i" || echo "-i")  
