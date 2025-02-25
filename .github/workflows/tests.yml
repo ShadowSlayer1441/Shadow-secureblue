@@ -25,8 +25,7 @@ jobs:
       
       - name: Install just
         run: |   
-          sudo apt-get update
-          sudo apt-get install just
+          sudo apt-get install just=1.39
 
       - name: Run tests
         shell: bash
