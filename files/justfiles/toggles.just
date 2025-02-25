@@ -331,7 +331,7 @@ fido-PAM-enable toggle="toggle":
         echo "if for example you enabled usbguard without having the hardware key plugged in. This can be especially problematic if"
         echo "you require FIDO U2 authentication for your sole wheel user. [sufficient/required]"
         read -r CHOICE
-        if [ "$CHOICE" == [sS]* ]; then
+        if [[ "$CHOICE" == [sS]* ]]; then
             choice="sufficient"
         else
             choice="required"
@@ -364,7 +364,7 @@ auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
         IFS=',' read -ra user_list <<< "$user_string"
         for user in "${user_list[@]}"; do
     	    user_home=$(getent passwd "$user" | awk -F':' '{ print $6}')
-    	    [[ -d "$user_home" ]] || {echo "Variable \$user_home for $user is somehow empty (check your getent passwd entries); safely exiting."; exit 1;}
+    	    [[ -d "$user_home" ]] || { echo "Variable \$user_home for $user is somehow empty (check your getent passwd entries); safely exiting."; exit 1;}
             mkdir -p "$user_home/.config/Yubico"
             if [ -f "$user_home/.config/Yubico/u2f_keys" ]; then
                 echo "Currently configured FIDO UF2 keys detected. Do you wish to overwrite them or append your new key? [overwrite/append]"
@@ -380,13 +380,13 @@ auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
                 if [ "$KEYS" == "append" ]; then
                     chattr -i "$user_home/.config/Yubico/u2f_keys"
                     echo /etc/tmp.yubikey >> "$user_home/.config/Yubico/u2f_keys"
-                    chattr -R +i "$user_home/.config/Yubico/
+                    chattr -R +i "$user_home/.config/Yubico/"
                 fi
             else
                 # We remove -i just incase the folder already exists, is in use for something else, and is immutable
-                chattr -i "$user_home/.config/Yubico/
+                chattr -R -i "$user_home/.config/Yubico/"
                 cp /etc/tmp.yubikey "$user_home/.config/Yubico/u2f_keys"
-                chattr -R +i "$user_home/.config/Yubico/
+                chattr -R +i "$user_home/.config/Yubico/"
             fi
         done
         rm /etc/tmp.yubikey
@@ -401,18 +401,18 @@ auth       required     pam_u2f.so" > "/etc/pam.d/u2f-required"
             if [ "$KEYS" == "overwrite" ]; then
                 chattr -i "$user_home/.config/Yubico/u2f_keys"
                 cp /etc/tmp.yubikey "$user_home/.config/Yubico/u2f_keys"
-                chattr -R +i "$user_home/.config/Yubico/
+                chattr -R +i "$user_home/.config/Yubico/"
             fi
             if [ "$KEYS" == "append" ]; then
                 chattr -i "$user_home/.config/Yubico/u2f_keys"
                 echo /etc/tmp.yubikey >> "$user_home/.config/Yubico/u2f_keys"
-                chattr -R +i "$user_home/.config/Yubico/
+                chattr -R +i "$user_home/.config/Yubico/"
             fi
         else
             # We remove -i just incase the folder already exists, is in use for something else, and is immutable
-            chattr -i "$user_home/.config/Yubico/
+            chattr -i "$user_home/.config/Yubico/"
             cp /etc/tmp.yubikey "$user_home/.config/Yubico/u2f_keys"
-            chattr -R +i "$user_home/.config/Yubico/
+            chattr -R +i "$user_home/.config/Yubico/"
         fi
         rm /etc/tmp.yubikey
     fi
@@ -424,14 +424,14 @@ fido-PAM-disable:
     set -eou pipefail
     echo "Do you want FIDO UF2 key authentication to be removed? [y/N]"
     read -r CHOICE
-    if [ "$CHOICE" == [nN]* ]; then
+    if [[ "$CHOICE" == [nN]* ]]; then
         exit
     fi
     [ -f "/etc/pam.d/u2f-sufficient" ] && rm "/etc/pam.d/u2f-sufficient" 
     [ -f "/etc/pam.d/u2f-required" ] && rm "/etc/pam.d/u2f-required"
     if authselect current | grep -q 'with-pam-u2f'; then
         new_authselect=$(authselect current | sed 's/with-pam-u2f//')
-        [ -z "$new_authselect"] && { echo "authselect without fido authentication appears to be nothing, check authselect current"; exit 1;}
+        [ -z "$new_authselect" ] && { echo "authselect without fido authentication appears to be nothing, check authselect current"; exit 1;}
         authselect select "$new_authselect"
     fi
     echo "FIDO UF2 authentication is now disabled for PAM authentication. Congratulations!"
