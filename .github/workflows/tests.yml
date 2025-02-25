@@ -25,7 +25,6 @@ jobs:
 
       - name: Just Installation
         uses: extractions/setup-just@6e1de3cc407de738551abd6c0923bd5ed5608042
-        run: sudo apt-get install just
 
       - name: Run tests
         shell: bash
