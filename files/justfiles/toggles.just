@@ -347,7 +347,7 @@ fido-PAM-enable toggle="toggle":
     if authselect current | grep -q 'with-pam-u2f'; then
         :
     else
-        authselect select "$(authselect current) with-pam-u2f".
+        authselect select local "$(authselect current | grep "-" | sed 's/- //' | tr '\n' ' ') with-pam-u2f".
     fi
     echo "Do you will to add this yubikey to every user (all users if required has been selected)? [y/N]"
     read -r ACCEPT
@@ -426,9 +426,9 @@ fido-PAM-disable:
     [ -f "/etc/pam.d/u2f-sufficient" ] && rm "/etc/pam.d/u2f-sufficient" 
     [ -f "/etc/pam.d/u2f-required" ] && rm "/etc/pam.d/u2f-required"
     if authselect current | grep -q 'with-pam-u2f'; then
-        new_authselect=$(authselect current | sed 's/with-pam-u2f//')
+        new_authselect=$(authselect current | grep "-" | sed 's/- //' | tr '\n' ' ' | sed 's/with-pam-u2f//')
         [ -z "$new_authselect" ] && { echo "authselect without fido authentication appears to be nothing, check authselect current"; exit 1;}
-        authselect select "$new_authselect"
+        authselect select local "$new_authselect"
     fi
     echo "FIDO UF2 authentication is now disabled for PAM authentication. Congratulations!"
     echo "Note your configured yubikeys have not been removed and are stored at ~/.config/Yubico/u2f_keys"
