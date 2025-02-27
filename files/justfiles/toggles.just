@@ -323,7 +323,7 @@ toggle-mac-randomization:
 fido-PAM-enable toggle="toggle":
     #! /bin/run0 /bin/bash
     set -eou pipefail
-    if [[ "{{ toggle }}" != "sufficient" ]] || [[ "{{ toggle }}" != "required" ]]; then
+    if [[ "{{ toggle }}" == "toggle" ]]; then
         echo "Do you want FIDO UF2 key authentication to be required (essentially making it MFA for the chosen account)" 
         echo "or sufficient (allowing it to replace a password, potentially one much longer than would otherwise be practical)?"
         echo ""
